@@ -17,7 +17,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 @Configuration
 public class Database {
 
-	public static final Logger log = Logger.getGlobal();
+	public static final Logger log = Logger.getLogger(Database.class.getCanonicalName());
 
 	@Autowired
 	private EntityManagerFactory entityManagerFactory;
@@ -25,6 +25,7 @@ public class Database {
 	@Bean(name = "dataSource")
 	public ComboPooledDataSource comboPooledDataSource() throws Exception {
 		log.info("**************Creating instance of ComboPooledDataSource**************");
+		
 		ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource(true);
 		
 		comboPooledDataSource.setDriverClass("org.h2.Driver");

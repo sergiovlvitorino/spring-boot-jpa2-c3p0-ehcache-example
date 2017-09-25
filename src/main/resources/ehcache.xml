@@ -17,6 +17,7 @@
 		timeToIdleSeconds="1800" 
 		timeToLiveSeconds="3600" 
 		overflowToDisk="false"
+		diskPersistent="false"
 		statistics="true">
 	</cache>
 
