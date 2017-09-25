@@ -7,6 +7,13 @@
 	<name>Spring Boot JPA2 C3P0 Ehcache Example</name>
 	<packaging>jar</packaging>
 	
+	<contributors>
+		<contributor>
+			<name>Sergio Vitorino</name>
+			<email>sergiovlvitorino@gmail.com</email>
+		</contributor>
+	</contributors>
+	
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
