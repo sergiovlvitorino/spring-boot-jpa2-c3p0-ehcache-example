@@ -1,26 +1,23 @@
-package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.configuration;
+package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure;
 
-import java.util.logging.Logger;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.logging.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
+@Primary
 @Configuration
 public class Database {
 
 	public static final Logger log = Logger.getLogger(Database.class.getCanonicalName());
-
-	@Autowired
-	private EntityManagerFactory entityManagerFactory;
 
 	@Bean(name = "dataSource")
 	public ComboPooledDataSource comboPooledDataSource() throws Exception {
@@ -44,7 +41,7 @@ public class Database {
 	}
 
 	@Autowired
-	@Bean(name = "entityManagerFactory")
+	@Bean
 	public EntityManagerFactory entityManagerFactory(DataSource dataSource) {
 		log.info("**************Creating instance of EntityManagerFactory**************");
 		LocalContainerEntityManagerFactoryBean localContainerEntityManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
@@ -54,8 +51,9 @@ public class Database {
 		return localContainerEntityManagerFactoryBean.getNativeEntityManagerFactory();
 	}
 
-	@Bean(name = "entityManager")
-	public EntityManager entityManager() {
+	@Autowired
+	@Bean
+	public EntityManager entityManager(EntityManagerFactory entityManagerFactory) {
 		log.info("**************Creating instance of EntityManager**************");
 		return entityManagerFactory.createEntityManager();
 	}
