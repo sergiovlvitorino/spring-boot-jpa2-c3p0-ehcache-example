@@ -11,6 +11,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Primary
@@ -24,6 +25,8 @@ public class Database {
 		log.info("**************Creating instance of ComboPooledDataSource**************");
 		
 		ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource(true);
+
+		Logger.getLogger("com.mchange.v2.c3p0").setLevel(Level.WARNING);
 		
 		comboPooledDataSource.setDriverClass("org.h2.Driver");
 		comboPooledDataSource.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=- 1;DB_CLOSE_ON_EXIT=FALSE");
