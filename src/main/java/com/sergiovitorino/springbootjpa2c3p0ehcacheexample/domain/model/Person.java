@@ -1,21 +1,21 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.domain.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import java.util.UUID;
 
 @Entity
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="personCache")
 @Data
 @Builder
 @AllArgsConstructor
@@ -23,10 +23,16 @@ import java.util.UUID;
 public class Person {
 
 	@Id
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@GeneratedValue(generator = "UUID")
-	@Type(type = "uuid-binary")
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@JdbcTypeCode(SqlTypes.BINARY)
 	private UUID id;
+
+	@NotBlank
+	@Size(max = 100)
 	private String name;
+
+	@NotBlank
+	@Size(max = 100)
 	private String job;
+
 }

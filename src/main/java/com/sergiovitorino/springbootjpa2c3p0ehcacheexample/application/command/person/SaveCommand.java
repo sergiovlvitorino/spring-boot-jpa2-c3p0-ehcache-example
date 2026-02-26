@@ -1,14 +1,18 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.person;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 public class SaveCommand {
-    @NotNull
+
+    @NotBlank
+    @Size(max = 100)
     private String name;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 100)
     private String job;
+
 }
