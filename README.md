@@ -1,18 +1,18 @@
-# Spring Boot 3 + JPA + JWT + Cache Example
+# Spring Boot 4 + JPA + JWT + Cache Example
 
-Example project demonstrating Spring Boot 3.2, Java 21, JWT authentication, JPA with HikariCP,
-and Spring Cache — using only Spring Boot starters and JDK built-ins (no external libraries).
+Example project demonstrating Spring Boot 4.0, Java 21, JWT authentication, JPA with HikariCP,
+and Spring Cache with Caffeine — using only Spring Boot starters and JDK built-ins.
 
 ## Stack
 
 | Layer | Technology |
 |---|---|
 | Runtime | Java 21 |
-| Framework | Spring Boot 3.2.3 |
+| Framework | Spring Boot 4.0.3 |
 | Persistence | Spring Data JPA + Hibernate 6 + HikariCP |
 | Database | H2 (in-memory) |
-| Cache | Spring Cache (`ConcurrentMapCacheManager`) |
-| Security | Spring Security 6 + JWT (spring-security-oauth2-jose / NimbusJWT HS256) |
+| Cache | Spring Cache + Caffeine (TTL 10min, max 1000 entries) |
+| Security | Spring Security 7 + JWT (spring-security-oauth2-jose / NimbusJWT HS256) |
 | Validation | Jakarta Bean Validation 3 |
 
 ## Requirements
@@ -40,10 +40,14 @@ export APP_JWT_SECRET=your-secret-here
 # Admin credentials (defaults: admin / changeme)
 export APP_ADMIN_USERNAME=admin
 export APP_ADMIN_PASSWORD=changeme
+
+# CORS origins (comma-separated, default: http://localhost:3000)
+export APP_CORS_ORIGINS=https://myapp.com,https://admin.myapp.com
 ```
 
 Defaults (dev only) are defined in [application.properties](src/main/resources/application.properties).
-**Never use the default JWT secret in production.**
+**Never use the default JWT secret or admin password in production** — the application will
+fail to start if defaults are detected in a production profile.
 
 ## API
 
@@ -60,6 +64,8 @@ Response:
 ```json
 { "token": "<jwt>", "type": "Bearer" }
 ```
+
+Rate limited to 5 attempts per minute per IP. Returns `429 Too Many Requests` when exceeded.
 
 ### Person
 
@@ -98,30 +104,45 @@ curl -s http://localhost:8080/api/person/<uuid> \
 | 400 | Validation error (response body lists fields) |
 | 401 | Missing or invalid token |
 | 404 | Person not found |
+| 429 | Too many login attempts |
 | 500 | Unexpected server error |
+
+## Security
+
+- **JWT** via Spring Security OAuth2 JOSE (NimbusJWT, HS256)
+- **Stateless sessions** — no server-side session storage
+- **Security headers** — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, HSTS
+- **Rate limiting** — login endpoint limited to 5 attempts/min per IP
+- **Startup validation** — rejects default credentials in production profiles
+- **CORS** — configurable via `APP_CORS_ORIGINS` environment variable
+- **BCrypt** password encoding
 
 ## Project Structure
 
 ```
-src/main/java/…/
+src/main/java/.../
 ├── Start.java                          # @SpringBootApplication entry point
 ├── application/
 │   ├── command/
 │   │   ├── auth/LoginCommand.java      # Login DTO
-│   │   └── person/                     # SaveCommand, FindByIdCommand
+│   │   └── person/SaveCommand.java     # Create person DTO
 │   └── service/PersonService.java      # @Cacheable / @CachePut
 ├── domain/
 │   ├── model/Person.java               # JPA entity (UUID PK)
 │   └── repository/PersonRepository.java
 ├── infrastructure/
+│   ├── CacheConfig.java                # @EnableCaching (Caffeine)
 │   ├── exception/
 │   │   ├── EntityNotFoundException.java
+│   │   ├── TooManyRequestsException.java
 │   │   └── GlobalExceptionHandler.java # @RestControllerAdvice
 │   └── security/
 │       ├── JwtConfig.java              # JwtEncoder / JwtDecoder beans
 │       ├── JwtUtil.java                # Token generation and validation
 │       ├── JwtAuthenticationFilter.java
-│       └── SecurityConfig.java         # SecurityFilterChain, CORS, @EnableCaching
+│       ├── LoginRateLimiter.java       # IP-based sliding window rate limiter
+│       ├── SecurityConfig.java         # SecurityFilterChain, CORS, headers
+│       └── SecurityPropertiesValidator.java # Startup credential validation
 └── ui/rest/controller/
     ├── AuthController.java
     └── PersonController.java
@@ -133,7 +154,24 @@ src/main/java/…/
 mvn clean test
 ```
 
-All 3 integration tests run against an embedded server with an in-memory H2 database.
+67 tests covering unit, integration, and security layers:
+
+| Suite | Tests | Scope |
+|---|---|---|
+| CommandValidationTest | 10 | Jakarta Bean Validation |
+| PersonServiceTest | 5 | Service layer (Mockito) |
+| PersonRepositoryTest | 5 | JPA repository (@DataJpaTest) |
+| PersonControllerMvcTest | 6 | REST endpoints (MockMvc) |
+| PersonControllerTest | 3 | Full integration (TestRestTemplate) |
+| AuthControllerMvcTest | 5 | Login endpoint (MockMvc) |
+| AuthControllerRateLimitMvcTest | 1 | Rate limiting → 429 |
+| JwtUtilTest | 7 | Token generation/validation |
+| JwtAuthenticationFilterTest | 5 | Bearer token filter |
+| LoginRateLimiterTest | 6 | Sliding window rate limiter |
+| SecurityPropertiesValidatorTest | 7 | Startup credential validation |
+| SecurityHeadersTest | 3 | Security response headers |
+| GlobalExceptionHandlerTest | 3 | Exception → HTTP status mapping |
+| ApplicationContextTest | 1 | Context loads |
 
 ## Author
 

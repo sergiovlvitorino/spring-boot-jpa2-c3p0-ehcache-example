@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.excep
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.exception.TooManyRequestsException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -34,6 +35,16 @@ public class GlobalExceptionHandler {
                 "status", 400,
                 "error", "Validation Failed",
                 "fields", fields
+        ));
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyRequests(TooManyRequestsException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", 429,
+                "error", "Too Many Requests",
+                "message", ex.getMessage()
         ));
     }
 

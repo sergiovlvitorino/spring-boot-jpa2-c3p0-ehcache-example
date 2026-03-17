@@ -1,6 +1,5 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,14 +17,17 @@ import java.time.temporal.ChronoUnit;
 @Component
 public class JwtUtil {
 
-    @Autowired
-    private JwtEncoder encoder;
+    private final JwtEncoder encoder;
+    private final JwtDecoder decoder;
+    private final long expirationMinutes;
 
-    @Autowired
-    private JwtDecoder decoder;
-
-    @Value("${app.jwt.expiration-minutes:60}")
-    private long expirationMinutes;
+    public JwtUtil(JwtEncoder encoder,
+                   JwtDecoder decoder,
+                   @Value("${app.jwt.expiration-minutes:60}") long expirationMinutes) {
+        this.encoder = encoder;
+        this.decoder = decoder;
+        this.expirationMinutes = expirationMinutes;
+    }
 
     public String generateToken(String username) {
         Instant now = Instant.now();
