@@ -1,14 +1,13 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.controller.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.auth.LoginCommand;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.person.SaveCommand;
+import tools.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.domain.model.Person;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
 
@@ -17,6 +16,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 public class PersonControllerTest {
 
 	@Autowired
@@ -32,11 +32,9 @@ public class PersonControllerTest {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 
-		LoginCommand login = new LoginCommand();
-		login.setUsername("admin");
-		login.setPassword("changeme");
+		String loginJson = "{\"username\":\"admin\",\"password\":\"changeme\"}";
 
-		HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(login), headers);
+		HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
 		ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
 				"http://localhost:" + port + "/auth/login",
 				HttpMethod.POST, entity,
@@ -54,11 +52,9 @@ public class PersonControllerTest {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBearerAuth(token);
 
-		SaveCommand command = new SaveCommand();
-		command.setName("Sergio");
-		command.setJob("Software Engineer");
+		String commandJson = "{\"name\":\"Sergio\",\"job\":\"Software Engineer\"}";
 
-		HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+		HttpEntity<String> entity = new HttpEntity<>(commandJson, headers);
 		ResponseEntity<String> responseEntity = restTemplate.postForEntity(
 				"http://localhost:" + port + "/api/person", entity, String.class);
 
@@ -76,11 +72,9 @@ public class PersonControllerTest {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBearerAuth(token);
 
-		SaveCommand command = new SaveCommand();
-		command.setName("Sergio");
-		command.setJob("Software Engineer");
+		String commandJson = "{\"name\":\"Sergio\",\"job\":\"Software Engineer\"}";
 
-		HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+		HttpEntity<String> entity = new HttpEntity<>(commandJson, headers);
 		ResponseEntity<String> responseEntity = restTemplate.postForEntity(
 				"http://localhost:" + port + "/api/person", entity, String.class);
 

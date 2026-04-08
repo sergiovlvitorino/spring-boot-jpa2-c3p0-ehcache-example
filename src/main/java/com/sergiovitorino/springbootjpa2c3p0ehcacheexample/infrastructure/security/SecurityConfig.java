@@ -1,8 +1,6 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,31 +22,47 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableCaching
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final String adminUsername;
+    private final String adminPassword;
+    private final String allowedOrigins;
 
-    @Value("${app.admin.username}")
-    private String adminUsername;
-
-    @Value("${app.admin.password}")
-    private String adminPassword;
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Value("${app.admin.username}") String adminUsername,
+            @Value("${app.admin.password}") String adminPassword,
+            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+        this.allowedOrigins = allowedOrigins;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CSRF desabilitado: API stateless com JWT, sem cookies de sessão
             .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers
+                .contentTypeOptions(cto -> {})
+                .frameOptions(fo -> fo.deny())
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000))
+            )
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
@@ -82,7 +96,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
