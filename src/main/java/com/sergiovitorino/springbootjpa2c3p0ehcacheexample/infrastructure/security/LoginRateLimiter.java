@@ -1,5 +1,6 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -35,6 +36,20 @@ public class LoginRateLimiter {
 
     int activeKeys() {
         return attempts.size();
+    }
+
+    void clear() {
+        attempts.clear();
+    }
+
+    @Scheduled(fixedRate = 60000)
+    void cleanupExpiredEntries() {
+        attempts.forEach((key, deque) -> {
+            cleanOldEntries(deque);
+            if (deque.isEmpty()) {
+                attempts.remove(key);
+            }
+        });
     }
 
     private void cleanOldEntries(Deque<Instant> deque) {

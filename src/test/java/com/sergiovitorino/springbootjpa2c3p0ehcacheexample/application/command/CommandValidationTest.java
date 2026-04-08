@@ -25,9 +25,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withValidData_shouldHaveNoViolations() {
-        SaveCommand command = new SaveCommand();
-        command.setName("Alice");
-        command.setJob("Engineer");
+        SaveCommand command = new SaveCommand("Alice", "Engineer");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertTrue(violations.isEmpty());
@@ -35,9 +33,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withBlankName_shouldFailValidation() {
-        SaveCommand command = new SaveCommand();
-        command.setName("  ");
-        command.setJob("Engineer");
+        SaveCommand command = new SaveCommand("  ", "Engineer");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -46,9 +42,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withNullName_shouldFailValidation() {
-        SaveCommand command = new SaveCommand();
-        command.setName(null);
-        command.setJob("Engineer");
+        SaveCommand command = new SaveCommand(null, "Engineer");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -57,9 +51,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withBlankJob_shouldFailValidation() {
-        SaveCommand command = new SaveCommand();
-        command.setName("Alice");
-        command.setJob("");
+        SaveCommand command = new SaveCommand("Alice", "");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -68,9 +60,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withNameExceeding100Chars_shouldFailValidation() {
-        SaveCommand command = new SaveCommand();
-        command.setName("A".repeat(101));
-        command.setJob("Engineer");
+        SaveCommand command = new SaveCommand("A".repeat(101), "Engineer");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -79,9 +69,7 @@ class CommandValidationTest {
 
     @Test
     void saveCommand_withNameExactly100Chars_shouldHaveNoViolations() {
-        SaveCommand command = new SaveCommand();
-        command.setName("A".repeat(100));
-        command.setJob("Engineer");
+        SaveCommand command = new SaveCommand("A".repeat(100), "Engineer");
 
         Set<ConstraintViolation<SaveCommand>> violations = validator.validate(command);
         assertTrue(violations.isEmpty());
@@ -91,9 +79,7 @@ class CommandValidationTest {
 
     @Test
     void loginCommand_withValidData_shouldHaveNoViolations() {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("secret");
+        LoginCommand command = new LoginCommand("admin", "secret");
 
         Set<ConstraintViolation<LoginCommand>> violations = validator.validate(command);
         assertTrue(violations.isEmpty());
@@ -101,9 +87,7 @@ class CommandValidationTest {
 
     @Test
     void loginCommand_withBlankUsername_shouldFailValidation() {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("");
-        command.setPassword("secret");
+        LoginCommand command = new LoginCommand("", "secret");
 
         Set<ConstraintViolation<LoginCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -112,9 +96,7 @@ class CommandValidationTest {
 
     @Test
     void loginCommand_withBlankPassword_shouldFailValidation() {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("  ");
+        LoginCommand command = new LoginCommand("admin", "  ");
 
         Set<ConstraintViolation<LoginCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());
@@ -123,9 +105,7 @@ class CommandValidationTest {
 
     @Test
     void loginCommand_withNullPassword_shouldFailValidation() {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword(null);
+        LoginCommand command = new LoginCommand("admin", null);
 
         Set<ConstraintViolation<LoginCommand>> violations = validator.validate(command);
         assertFalse(violations.isEmpty());

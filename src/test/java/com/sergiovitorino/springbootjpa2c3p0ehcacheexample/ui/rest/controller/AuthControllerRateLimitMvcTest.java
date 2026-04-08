@@ -1,7 +1,5 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.ui.rest.controller;
 
-import tools.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.auth.LoginCommand;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.JwtUtil;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.LoginRateLimiter;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.SecurityConfig;
@@ -32,29 +30,24 @@ class AuthControllerRateLimitMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private JwtUtil jwtUtil;
 
     @Test
     void login_afterMaxAttempts_shouldReturn429() throws Exception {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("wrongpassword");
+        String json = "{\"username\":\"admin\",\"password\":\"wrongpassword\"}";
 
         // Exhaust rate limit with failed attempts
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(command)));
+                    .content(json));
         }
 
         // Next attempt should be rate limited
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content(json))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.status").value(429))
                 .andExpect(jsonPath("$.error").value("Too Many Requests"));

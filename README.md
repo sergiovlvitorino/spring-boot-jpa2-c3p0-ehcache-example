@@ -13,6 +13,7 @@ and Spring Cache with Caffeine — using only Spring Boot starters and JDK built
 | Database | H2 (in-memory) |
 | Cache | Spring Cache + Caffeine (TTL 10min, max 1000 entries) |
 | Security | Spring Security 7 + JWT (spring-security-oauth2-jose / NimbusJWT HS256) |
+| Monitoring | Spring Boot Actuator (health, info, metrics) |
 | Validation | Jakarta Bean Validation 3 |
 
 ## Requirements
@@ -116,6 +117,8 @@ curl -s http://localhost:8080/api/person/<uuid> \
 - **Startup validation** — rejects default credentials in production profiles
 - **CORS** — configurable via `APP_CORS_ORIGINS` environment variable
 - **BCrypt** password encoding
+- **JWT claims** — includes `iss` and `aud` to prevent cross-service token reuse
+- **Logging** — authentication events, errors, and JWT failures logged via SLF4J
 
 ## Project Structure
 
@@ -132,6 +135,7 @@ src/main/java/.../
 │   └── repository/PersonRepository.java
 ├── infrastructure/
 │   ├── CacheConfig.java                # @EnableCaching (Caffeine)
+│   ├── SchedulingConfig.java           # @EnableScheduling (rate limiter cleanup)
 │   ├── exception/
 │   │   ├── EntityNotFoundException.java
 │   │   ├── TooManyRequestsException.java
@@ -154,23 +158,30 @@ src/main/java/.../
 mvn clean test
 ```
 
-67 tests covering unit, integration, and security layers:
+96 tests covering unit, integration, security, and architecture layers:
 
 | Suite | Tests | Scope |
 |---|---|---|
 | CommandValidationTest | 10 | Jakarta Bean Validation |
 | PersonServiceTest | 5 | Service layer (Mockito) |
+| PersonServiceTransactionalTest | 2 | @Transactional annotations (reflection) |
 | PersonRepositoryTest | 5 | JPA repository (@DataJpaTest) |
 | PersonControllerMvcTest | 6 | REST endpoints (MockMvc) |
 | PersonControllerTest | 3 | Full integration (TestRestTemplate) |
 | AuthControllerMvcTest | 5 | Login endpoint (MockMvc) |
 | AuthControllerRateLimitMvcTest | 1 | Rate limiting → 429 |
+| RateLimiterBehaviorTest | 3 | Valid logins don't consume rate limit |
 | JwtUtilTest | 7 | Token generation/validation |
+| JwtClaimsTest | 5 | JWT issuer/audience/subject/exp claims |
 | JwtAuthenticationFilterTest | 5 | Bearer token filter |
+| JwtSecretValidationTest | 5 | JWT secret length validation |
 | LoginRateLimiterTest | 6 | Sliding window rate limiter |
 | SecurityPropertiesValidatorTest | 7 | Startup credential validation |
+| SecurityArchitectureTest | 7 | No @Autowired fields, records immutability |
 | SecurityHeadersTest | 3 | Security response headers |
 | GlobalExceptionHandlerTest | 3 | Exception → HTTP status mapping |
+| GlobalExceptionHandlerLoggingTest | 5 | Error logging, no data leakage |
+| ActuatorEndpointsTest | 2 | Health/info endpoints public |
 | ApplicationContextTest | 1 | Context loads |
 
 ## Author

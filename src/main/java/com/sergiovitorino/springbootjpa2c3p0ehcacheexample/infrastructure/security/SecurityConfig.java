@@ -1,6 +1,5 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,22 +29,27 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final String adminUsername;
+    private final String adminPassword;
+    private final String allowedOrigins;
 
-    @Value("${app.admin.username}")
-    private String adminUsername;
-
-    @Value("${app.admin.password}")
-    private String adminPassword;
-
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Value("${app.admin.username}") String adminUsername,
+            @Value("${app.admin.password}") String adminPassword,
+            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+        this.allowedOrigins = allowedOrigins;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CSRF desabilitado: API stateless com JWT, sem cookies de sessão
             .csrf(csrf -> csrf.disable())
             .headers(headers -> headers
                 .contentTypeOptions(cto -> {})
@@ -58,6 +62,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

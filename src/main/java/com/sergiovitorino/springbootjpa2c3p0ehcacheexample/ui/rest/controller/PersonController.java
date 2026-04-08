@@ -20,7 +20,7 @@ public class PersonController {
 
 	@PostMapping
 	public ResponseEntity<Person> post(@RequestBody @Valid SaveCommand command) {
-		Person person = Person.builder().name(command.getName()).job(command.getJob()).build();
+		Person person = Person.builder().name(command.name()).job(command.job()).build();
 		return ResponseEntity.status(HttpStatus.CREATED).body(personService.save(person));
 	}
 

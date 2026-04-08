@@ -1,7 +1,5 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.ui.rest.controller;
 
-import tools.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.auth.LoginCommand;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.JwtUtil;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.LoginRateLimiter;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.SecurityConfig;
@@ -33,9 +31,6 @@ class AuthControllerMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     // Satisfies JwtAuthenticationFilter dependency
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -44,13 +39,9 @@ class AuthControllerMvcTest {
     void login_withValidCredentials_shouldReturn200WithToken() throws Exception {
         when(jwtUtil.generateToken("admin")).thenReturn("mocked-jwt-token");
 
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("changeme");
-
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"username\":\"admin\",\"password\":\"changeme\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("mocked-jwt-token"))
                 .andExpect(jsonPath("$.type").value("Bearer"));
@@ -58,13 +49,9 @@ class AuthControllerMvcTest {
 
     @Test
     void login_withWrongPassword_shouldReturn401() throws Exception {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("wrongpassword");
-
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"username\":\"admin\",\"password\":\"wrongpassword\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.error").value("Unauthorized"));
@@ -72,13 +59,9 @@ class AuthControllerMvcTest {
 
     @Test
     void login_withBlankUsername_shouldReturn400() throws Exception {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("");
-        command.setPassword("changeme");
-
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"username\":\"\",\"password\":\"changeme\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.fields.username").exists());
@@ -86,13 +69,9 @@ class AuthControllerMvcTest {
 
     @Test
     void login_withBlankPassword_shouldReturn400() throws Exception {
-        LoginCommand command = new LoginCommand();
-        command.setUsername("admin");
-        command.setPassword("  ");
-
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"username\":\"admin\",\"password\":\"  \"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.password").exists());
     }

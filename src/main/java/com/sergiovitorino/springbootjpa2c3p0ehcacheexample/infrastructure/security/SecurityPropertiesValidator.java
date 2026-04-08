@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 public class SecurityPropertiesValidator {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityPropertiesValidator.class);
+    private static final int MIN_JWT_SECRET_BYTES = 32;
 
     static final String DEFAULT_JWT_SECRET = "dev-only-insecure-key-change-me-in-production!";
     static final String DEFAULT_ADMIN_PASSWORD = "changeme";
@@ -35,6 +37,7 @@ public class SecurityPropertiesValidator {
     @EventListener(ApplicationReadyEvent.class)
     public void validate() {
         if (isProductionProfile()) {
+            validateJwtSecretLength();
             if (DEFAULT_JWT_SECRET.equals(jwtSecret)) {
                 throw new IllegalStateException(
                         "Default JWT secret detected in production! Set APP_JWT_SECRET environment variable.");
@@ -50,6 +53,15 @@ public class SecurityPropertiesValidator {
             if (DEFAULT_ADMIN_PASSWORD.equals(adminPassword)) {
                 log.warn("Using default admin password — acceptable only for development/testing.");
             }
+        }
+    }
+
+    private void validateJwtSecretLength() {
+        int secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8).length;
+        if (secretBytes < MIN_JWT_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "JWT secret must be at least " + MIN_JWT_SECRET_BYTES + " bytes (256 bits) for HS256. " +
+                    "Current length: " + secretBytes + " bytes.");
         }
     }
 

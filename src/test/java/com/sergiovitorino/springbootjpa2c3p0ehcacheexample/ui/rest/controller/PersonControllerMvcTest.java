@@ -1,7 +1,5 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.ui.rest.controller;
 
-import tools.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.command.person.SaveCommand;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.service.PersonService;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.domain.model.Person;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.exception.EntityNotFoundException;
@@ -40,9 +38,6 @@ class PersonControllerMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private PersonService personService;
 
@@ -52,17 +47,13 @@ class PersonControllerMvcTest {
     @Test
     @WithMockUser
     void post_withValidCommand_shouldReturn201WithPersonBody() throws Exception {
-        SaveCommand command = new SaveCommand();
-        command.setName("Alice");
-        command.setJob("Engineer");
-
         UUID id = UUID.randomUUID();
         Person saved = Person.builder().id(id).name("Alice").job("Engineer").build();
         when(personService.save(any(Person.class))).thenReturn(saved);
 
         mockMvc.perform(post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"name\":\"Alice\",\"job\":\"Engineer\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.name").value("Alice"))
@@ -72,13 +63,9 @@ class PersonControllerMvcTest {
     @Test
     @WithMockUser
     void post_withBlankName_shouldReturn400() throws Exception {
-        SaveCommand command = new SaveCommand();
-        command.setName("");
-        command.setJob("Engineer");
-
         mockMvc.perform(post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"name\":\"\",\"job\":\"Engineer\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.fields.name").exists());
@@ -87,13 +74,9 @@ class PersonControllerMvcTest {
     @Test
     @WithMockUser
     void post_withBlankJob_shouldReturn400() throws Exception {
-        SaveCommand command = new SaveCommand();
-        command.setName("Alice");
-        command.setJob("   ");
-
         mockMvc.perform(post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"name\":\"Alice\",\"job\":\"   \"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.job").exists());
     }
@@ -126,13 +109,9 @@ class PersonControllerMvcTest {
 
     @Test
     void post_withoutAuthentication_shouldReturn401() throws Exception {
-        SaveCommand command = new SaveCommand();
-        command.setName("Alice");
-        command.setJob("Engineer");
-
         mockMvc.perform(post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
+                        .content("{\"name\":\"Alice\",\"job\":\"Engineer\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }
