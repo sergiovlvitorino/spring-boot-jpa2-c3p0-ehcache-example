@@ -5,7 +5,7 @@ import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.domain.repository.Per
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.exception.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,8 +22,12 @@ class PersonServiceTest {
     @Mock
     private PersonRepository repository;
 
-    @InjectMocks
     private PersonService service;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        service = new PersonService(repository, new SimpleMeterRegistry());
+    }
 
     @Test
     void save_shouldDelegateToRepositoryAndReturnSavedPerson() {

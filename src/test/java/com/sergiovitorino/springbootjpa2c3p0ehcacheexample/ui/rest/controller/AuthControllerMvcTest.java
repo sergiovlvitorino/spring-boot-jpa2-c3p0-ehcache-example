@@ -1,23 +1,26 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.ui.rest.controller;
 
+import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.service.AuthService;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.JwtUtil;
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.LoginRateLimiter;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import({SecurityConfig.class, LoginRateLimiter.class})
+@Import(SecurityConfig.class)
 @TestPropertySource(properties = {
         "app.admin.username=admin",
         "app.admin.password=changeme",
@@ -31,13 +34,16 @@ class AuthControllerMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Satisfies JwtAuthenticationFilter dependency
+    @MockitoBean
+    private AuthService authService;
+
     @MockitoBean
     private JwtUtil jwtUtil;
 
     @Test
     void login_withValidCredentials_shouldReturn200WithToken() throws Exception {
-        when(jwtUtil.generateToken("admin")).thenReturn("mocked-jwt-token");
+        when(authService.authenticate(eq("admin"), eq("changeme"), anyString()))
+                .thenReturn("mocked-jwt-token");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -49,6 +55,9 @@ class AuthControllerMvcTest {
 
     @Test
     void login_withWrongPassword_shouldReturn401() throws Exception {
+        when(authService.authenticate(eq("admin"), eq("wrongpassword"), anyString()))
+                .thenThrow(new BadCredentialsException("Invalid credentials"));
+
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"wrongpassword\"}"))
