@@ -1,21 +1,20 @@
 package com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security;
 
-import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.infrastructure.security.LoginRateLimiter;
+import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.application.service.AuthService;
 import com.sergiovitorino.springbootjpa2c3p0ehcacheexample.ui.rest.controller.AuthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import({SecurityConfig.class, LoginRateLimiter.class})
+@Import(SecurityConfig.class)
 @TestPropertySource(properties = {
         "app.admin.username=admin",
         "app.admin.password=changeme",
@@ -28,6 +27,9 @@ class SecurityHeadersTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AuthService authService;
 
     @MockitoBean
     private JwtUtil jwtUtil;
